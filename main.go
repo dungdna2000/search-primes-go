@@ -17,6 +17,7 @@ var wait_mark sync.WaitGroup
 func mark(id int, start int64, end int64, i int64) {
 
 	// last := time.Now()
+	//fmt.Println("mark ", id, " for ", i, " start: ", start, " , end: ", end)
 
 	for j := start; j <= end; j += i {
 		if j%2 != 0 {
@@ -30,7 +31,7 @@ func mark(id int, start int64, end int64, i int64) {
 	}
 
 	wait_mark.Done()
-	fmt.Println("mark ", id, " for ", i, " done!")
+	//fmt.Println("mark ", id, " for ", i, " done!")
 }
 
 func searchPrime(N int64) {
@@ -70,10 +71,14 @@ func searchPrime(N int64) {
 			*/
 
 			// Use 2 routines to hopefully speed things up!
-			//d := (N - i*i) / 2
-			//wait_mark.Add(2)
-			go mark(1, i*i, N, i)
-			//go mark(2, d+i, N, i)
+			isquare := i * i
+			d := (N - isquare) / 2
+			m := isquare + d
+			m = m - m%i // m%i is to make sure m is at the correct (i-th step)
+
+			wait_mark.Add(2)
+			go mark(1, isquare, m, i)
+			go mark(2, m+i, N, i)
 
 			wait_mark.Wait()
 
@@ -115,7 +120,7 @@ https://t5k.org/howmany.html
 10,000,000          664,579
 100,000,000         5,761,455
 1,000,000,000       50,847,534
-10,000,000,000      455,052,511         (ok)      459,176,864   10,000,000,000
+10,000,000,000      455,052,511         (ok)
 100,000,000,000     4,118,054,813		(ok ~30m)
 1,000,000,000,000   37,607,912,018		(   ~300m? )
 10,000,000,000,000  346,065,536,839
