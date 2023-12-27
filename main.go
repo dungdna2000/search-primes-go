@@ -5,19 +5,49 @@ import (
 	"math"
 	"time"
 
+	"sync"
+
 	"homecredit.vn/prime-go/sieve"
 )
 
 var prime_count int64
 
+var wait_mark sync.WaitGroup
+
+func mark(id int, start int64, end int64, i int64) {
+
+	// last := time.Now()
+
+	for j := start; j <= end; j += i {
+		if j%2 != 0 {
+			sieve.Mark(j)
+		}
+
+		// if time.Since(last) > time.Second {
+		// 	fmt.Println("mark ", id, ": [", i, "]", j, " ")
+		// 	last = time.Now()
+		// }
+	}
+
+	wait_mark.Done()
+	fmt.Println("mark ", id, " for ", i, " done!")
+}
+
 func searchPrime(N int64) {
 
+	fmt.Println("DEBUG Initializing sieve with size ", N)
 	sieve.Init(N)
+
 	sieve.Begin()
 
 	nsqrt := int64(math.Sqrt(float64(N)))
 
-	for i := int64(3); i <= nsqrt; i += 2 {
+	fmt.Println("DEBUG Marking size Sqrt(N)=", nsqrt)
+
+	var i int64
+
+	//last := time.Now()
+	for i = 3; i <= nsqrt; i += 2 {
 
 		byte_i := sieve.Get()
 
@@ -25,21 +55,43 @@ func searchPrime(N int64) {
 		// Found a real prime! process to marking
 		//
 		if byte_i != 0 {
-			for j := i * i; j <= N; j += i {
-				if j%2 != 0 {
-					sieve.Mark(j)
+
+			/*
+				for j := i * i; j <= N; j += i {
+					if j%2 != 0 {
+						sieve.Mark(j)
+					}
+
+					if time.Since(last) > time.Second {
+						fmt.Println("[", i, "]", j, " ")
+						last = time.Now()
+					}
 				}
-			}
+			*/
+
+			// Use 2 routines to hopefully speed things up!
+			//d := (N - i*i) / 2
+			//wait_mark.Add(2)
+			go mark(1, i*i, N, i)
+			//go mark(2, d+i, N, i)
+
+			wait_mark.Wait()
+
 		}
 
 		sieve.Next()
+
+		/*if time.Since(last) > time.Second {
+			fmt.Println(i, "<<<<<<<<<<<<<<")
+			last = time.Now()
+		}*/
 	}
 
 	fmt.Println("Done marking. Now counting primes!")
 	prime_count = 1
 
 	sieve.Begin()
-	for i := int64(3); i <= N; i += 2 {
+	for i = 3; i <= N; i += 2 {
 		byte_i := sieve.Get()
 		if byte_i != 0 {
 			prime_count++ //primes.add(i);
@@ -63,17 +115,20 @@ https://t5k.org/howmany.html
 10,000,000          664,579
 100,000,000         5,761,455
 1,000,000,000       50,847,534
-10,000,000,000      455,052,511         (ok)
-100,000,000,000     4,118,054,813
-1,000,000,000,000   37,607,912,018
+10,000,000,000      455,052,511         (ok)      459,176,864   10,000,000,000
+100,000,000,000     4,118,054,813		(ok ~30m)
+1,000,000,000,000   37,607,912,018		(   ~300m? )
 10,000,000,000,000  346,065,536,839
 ...
 2,000,000,000       98,222,287
 */
 
+const B int64 = 1000000000
+
 func main() {
 	start := time.Now()
-	searchPrime(1000000000)
-	//searchPrime(100000000000)
+	//searchPrime(1000000000)
+
+	searchPrime(10 * B)
 	fmt.Println("Found ", prime_count, " primes in ", time.Since(start))
 }

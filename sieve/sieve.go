@@ -1,5 +1,7 @@
 package sieve
 
+import "fmt"
+
 var bits []byte
 
 func init() {
@@ -26,12 +28,21 @@ func Next() {
 // Initialize the sieve to store enough N int64
 func Init(N int64) {
 
-	bits = make([]byte, N/16+1)
+	fmt.Println("DEBUG sieve.Init N = ", N)
+
+	required_size := N/16 + 1
+	fmt.Println("DEBUG required_size =", required_size)
+
+	bits = make([]byte, required_size)
+
+	len_bits := len(bits)
+
+	fmt.Println("DEBUG len(bits) =", len_bits)
 
 	//
 	// initially, set all bits to 1 to tell that they are primes
 	//
-	for i := 0; i < len(bits); i++ {
+	for i := 0; i < len_bits; i++ {
 		bits[i] = 0b11111111
 	}
 }
