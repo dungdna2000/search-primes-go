@@ -11,28 +11,32 @@ import (
 var prime_count int64
 var SV sieve.Sieve
 
+var mark_i int64
+var mark_j int64
+var count_i int64
+var finished bool
+
 func searchPrime(N int64) {
 
-	fmt.Println("DEBUG Initializing sieve with size ", N)
+	fmt.Println("D Initializing sieve with size ", N)
 	SV.Init(N)
 
 	SV.Begin()
 
 	nsqrt := int64(math.Sqrt(float64(N)))
 
-	fmt.Println("DEBUG Start marking  sqrt(N)=", nsqrt)
+	fmt.Println("D Start marking  sqrt(N)=", nsqrt)
 
-	var i int64
+	mark_j = 0
 
-	for i = 3; i <= nsqrt; i += 2 {
-
+	for mark_i = 3; mark_i <= nsqrt; mark_i += 2 {
 		byte_i := SV.Get()
 
 		if byte_i != 0 {
 
-			var _2i int64 = 2 * i
-			for j := i * i; j <= N; j += _2i {
-				SV.Mark(j)
+			var _2i int64 = 2 * mark_i
+			for mark_j = mark_i * mark_i; mark_j <= N; mark_j += _2i {
+				SV.Mark(mark_j)
 			}
 
 			// Use 2 routines to hopefully speed things up!
@@ -51,11 +55,11 @@ func searchPrime(N int64) {
 		SV.Next()
 	}
 
-	fmt.Println("Done marking. Now counting primes!")
-	prime_count = 1
+	fmt.Println("D Marking done. Counting primes...")
 
+	prime_count = 1
 	SV.Begin()
-	for i = 3; i <= N; i += 2 {
+	for count_i = 3; count_i <= N; count_i += 2 {
 		byte_i := SV.Get()
 		if byte_i != 0 {
 			prime_count++
@@ -63,6 +67,7 @@ func searchPrime(N int64) {
 		SV.Next()
 	}
 
+	finished = true
 }
 
 /*
@@ -89,9 +94,15 @@ const B int64 = 1000000000
 
 func main() {
 	start := time.Now()
-	//searchPrime(1000000000)
 
-	searchPrime(10000)
-	fmt.Println(SV)
+	finished = false
+
+	go searchPrime(100 * B)
+
+	for !finished {
+		fmt.Println("mark: ", mark_i, ">", mark_j, " count: ", count_i)
+		time.Sleep(2 * time.Second)
+	}
+
 	fmt.Println("Found ", prime_count, " primes in ", time.Since(start))
 }
