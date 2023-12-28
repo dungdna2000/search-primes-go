@@ -5,105 +5,62 @@ import (
 	"math"
 	"time"
 
-	"sync"
-
 	"homecredit.vn/prime-go/sieve"
 )
 
 var prime_count int64
-
-var wait_mark sync.WaitGroup
-
-func mark(id int, start int64, end int64, i int64) {
-
-	// last := time.Now()
-	//fmt.Println("mark ", id, " for ", i, " start: ", start, " , end: ", end)
-
-	for j := start; j <= end; j += i {
-		if j%2 != 0 {
-			sieve.Mark(j)
-		}
-
-		// if time.Since(last) > time.Second {
-		// 	fmt.Println("mark ", id, ": [", i, "]", j, " ")
-		// 	last = time.Now()
-		// }
-	}
-
-	wait_mark.Done()
-	//fmt.Println("mark ", id, " for ", i, " done!")
-}
+var SV sieve.Sieve
 
 func searchPrime(N int64) {
 
 	fmt.Println("DEBUG Initializing sieve with size ", N)
-	sieve.Init(N)
+	SV.Init(N)
 
-	sieve.Begin()
+	SV.Begin()
 
 	nsqrt := int64(math.Sqrt(float64(N)))
 
-	fmt.Println("DEBUG Marking size Sqrt(N)=", nsqrt)
+	fmt.Println("DEBUG Start marking  sqrt(N)=", nsqrt)
 
 	var i int64
 
-	//last := time.Now()
 	for i = 3; i <= nsqrt; i += 2 {
 
-		byte_i := sieve.Get()
+		byte_i := SV.Get()
 
-		//
-		// Found a real prime! process to marking
-		//
 		if byte_i != 0 {
 
-			/*
-				for j := i * i; j <= N; j += i {
-					if j%2 != 0 {
-						sieve.Mark(j)
-					}
-
-					if time.Since(last) > time.Second {
-						fmt.Println("[", i, "]", j, " ")
-						last = time.Now()
-					}
-				}
-			*/
+			var _2i int64 = 2 * i
+			for j := i * i; j <= N; j += _2i {
+				SV.Mark(j)
+			}
 
 			// Use 2 routines to hopefully speed things up!
-			isquare := i * i
-			d := (N - isquare) / 2
-			m := isquare + d
-			m = m - m%i // m%i is to make sure m is at the correct (i-th step)
+			// isquare := i * i
+			// d := (N - isquare) / 2
+			// m := isquare + d
+			// m = m - m%i // m%i is to make sure m is at the correct (i-th step)
 
-			wait_mark.Add(2)
-			go mark(1, isquare, m, i)
-			go mark(2, m+i, N, i)
+			// wait_mark.Add(2)
+			// go mark(1, isquare, m, i)
+			// go mark(2, m+i, N, i)
 
-			wait_mark.Wait()
-
+			// wait_mark.Wait()
 		}
 
-		sieve.Next()
-
-		/*if time.Since(last) > time.Second {
-			fmt.Println(i, "<<<<<<<<<<<<<<")
-			last = time.Now()
-		}*/
+		SV.Next()
 	}
 
 	fmt.Println("Done marking. Now counting primes!")
 	prime_count = 1
 
-	sieve.Begin()
+	SV.Begin()
 	for i = 3; i <= N; i += 2 {
-		byte_i := sieve.Get()
+		byte_i := SV.Get()
 		if byte_i != 0 {
-			prime_count++ //primes.add(i);
-			//fmt.Print(i, " ")
+			prime_count++
 		}
-
-		sieve.Next()
+		SV.Next()
 	}
 
 }
@@ -134,6 +91,7 @@ func main() {
 	start := time.Now()
 	//searchPrime(1000000000)
 
-	searchPrime(10 * B)
+	searchPrime(10000)
+	fmt.Println(SV)
 	fmt.Println("Found ", prime_count, " primes in ", time.Since(start))
 }
