@@ -40,7 +40,7 @@ func (sv *Sieve) Init(N int64) {
 
 	fmt.Println("DEBUG sieve.Init N = ", N)
 
-	required_size := N/16 + 1
+	required_size := N/(3*8) + 1
 	fmt.Println("DEBUG required_size =", required_size)
 
 	sv.bits = make([]byte, required_size)
@@ -84,11 +84,14 @@ func (sv *Sieve) Get() byte {
 // Mark position idx as non prime
 func (sv *Sieve) Mark(n int64) {
 
-	// b:	0                    1                      2
-	// idx:	0 1 2 3  4  5  6  7  8  9 10 11 12 13 14 15 16 .... (idx)
-	// n:	3 5 7 9 11 13 15 17 19 21 23 25 27 29 31 33 35 .... (idx*2+3) = ii  => ii = ( idx - 3 ) / 2
+	// compact sieve for 2
+	//var ii int64 = (n - 3) / 2
 
-	var ii int64 = (n - 3) / 2
+	// compact sieve for 2, 3
+	var ii int64 = (n - 5) / 3
+	if (n-5)%3 == 2 {
+		ii++
+	}
 
 	b := int(ii / 8)
 	bi := int(ii % 8)

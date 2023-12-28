@@ -29,7 +29,8 @@ func searchPrime(N int64) {
 
 	mark_j = 0
 
-	for mark_i = 3; mark_i <= nsqrt; mark_i += 2 {
+	var d int64 = 4
+	for mark_i = 5; mark_i <= nsqrt; mark_i += d {
 		byte_i := SV.Get()
 
 		if byte_i != 0 {
@@ -53,18 +54,20 @@ func searchPrime(N int64) {
 		}
 
 		SV.Next()
+		d = flip24(d)
 	}
 
 	fmt.Println("D Marking done. Counting primes...")
 
-	prime_count = 1
+	prime_count = 2
 	SV.Begin()
-	for count_i = 3; count_i <= N; count_i += 2 {
+	for count_i = 5; count_i <= N; count_i += d {
 		byte_i := SV.Get()
 		if byte_i != 0 {
 			prime_count++
 		}
 		SV.Next()
+		d = flip24(d)
 	}
 
 	finished = true
@@ -74,35 +77,70 @@ func searchPrime(N int64) {
 
 https://t5k.org/howmany.html
 
-100			        25
-1000		        168
-10000		        1,229
-100,000		        9,592
-1,000,000	        78,498
-10,000,000          664,579
-100,000,000         5,761,455
-1,000,000,000       50,847,534
-10,000,000,000      455,052,511         (ok)
-100,000,000,000     4,118,054,813		(ok ~30m)
-1,000,000,000,000   37,607,912,018		(   ~300m? )
-10,000,000,000,000  346,065,536,839
-...
-2,000,000,000       98,222,287
+01 	10						4
+02	100			        	25
+03	1000		        	168
+04	10000		        	1,229
+05	100,000		        	9,592
+06	1,000,000	        	78,498
+07	10,000,000          	664,579
+08	100,000,000         	5,761,455
+09	1,000,000,000       	50,847,534			9s
+10	10,000,000,000      	455,052,511         1m42s
+11	100,000,000,000     	4,118,054,813
+12	1,000,000,000,000   	37,607,912,018		(300m)
+13	10,000,000,000,000  	346,065,536,839
+14	100,000,000,000,000		3,204,941,750,802
+15	1,000,000,000,000,000	29,844,570,422,669
+
 */
 
 const B int64 = 1000000000
+
+func flip24(d int64) int64 {
+	if d == 4 {
+		return 2
+	}
+	return 4
+}
+
+// func main() {
+// 	N := 100
+
+// 	var d int
+// 	d = 4
+// 	for i := 5; i < N; i += d {
+// 		fmt.Printf("%02d ", i)
+// 		d = flipflop(d, 2, 4)
+// 	}
+// 	fmt.Println()
+
+// 	d = 4
+// 	for i := 5; i < N; i += d {
+
+// 		t := (i - 5) / 3
+// 		if (i-5)%3 == 2 {
+// 			t += 1
+// 		}
+
+// 		fmt.Printf("%02d ", t)
+// 		d = flipflop(d, 2, 4)
+// 	}
+// 	fmt.Println()
+
+// }
 
 func main() {
 	start := time.Now()
 
 	finished = false
 
-	go searchPrime(100 * B)
+	searchPrime(1000)
 
-	for !finished {
-		fmt.Println("mark: ", mark_i, ">", mark_j, " count: ", count_i)
-		time.Sleep(2 * time.Second)
-	}
+	// for !finished {
+	// 	fmt.Println(time.Since(start), ": P: ", mark_i, ">", mark_j, " count: ", count_i)
+	// 	time.Sleep(2 * time.Second)
+	// }
 
 	fmt.Println("Found ", prime_count, " primes in ", time.Since(start))
 }
