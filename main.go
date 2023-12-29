@@ -35,17 +35,18 @@ func searchPrime(N int64) {
 			for composite = p * p; composite <= N; composite += _2i {
 				SV.Mark(composite)
 			}
-			//prime_count++
+			prime_count++
 		}
 
 		SV.Next()
 		d = flip24(d)
 	}
 
-	prime_count = 2
-	d = 4
-	SV.Begin()
-	for count_i = 5; count_i <= N; count_i += d {
+	//prime_count = 2
+	//d = 4
+	//SV.Begin()
+
+	for ; p <= N; p += d {
 		if SV.Get() != 0 {
 			prime_count++
 		}
@@ -70,7 +71,7 @@ https://t5k.org/howmany.html
 08	100,000,000         	5,761,455
 09	1,000,000,000       	50,847,534			~7s
 10	10,000,000,000      	455,052,511         ~1m24s
-11	100,000,000,000     	4,118,054,813		~0m
+11	100,000,000,000     	4,118,054,813		~10m
 12	1,000,000,000,000   	37,607,912,018		<< this is our TARGET
 13	10,000,000,000,000  	346,065,536,839
 14	100,000,000,000,000		3,204,941,750,802
