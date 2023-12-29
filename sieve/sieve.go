@@ -62,13 +62,9 @@ func (sv Sieve) String() string {
 // Initialize the sieve to store enough N int64
 func (sv *Sieve) Init(N int64) {
 
-	fmt.Println("D sieve.Init N = ", N)
-
 	required_size := N/(3*8) + 1
 	sv.bits = make([]byte, required_size)
 	len_bits := len(sv.bits)
-
-	fmt.Println("D sieve size =", len_bits)
 
 	//
 	// initially, set all bits to 1 to tell that they are primes
@@ -80,7 +76,6 @@ func (sv *Sieve) Init(N int64) {
 
 // Retrieve current element.
 func (sv *Sieve) Get() byte {
-	// is this actually faster?
 	return sv.bits[sv.current_byte] & mask_get[sv.current_bit]
 
 	// var v byte
@@ -108,19 +103,21 @@ func (sv *Sieve) Get() byte {
 // Mark position idx as non prime
 func (sv *Sieve) Mark(n int64) {
 
+	//
 	// compact sieve for 2
+	//
 	//var ii int64 = (n - 3) / 2
 
+	//
 	// compact sieve for 2, 3
+	//
 	var ii int64 = (n - 5) / 3
 	m := (n - 5) % 3
 	if m == 2 {
 		ii++
 	} else if m != 0 {
-		return // mark a divider of 3 (m must be either 0 or 2)> skip!
+		return // m==1 is a multiple of 3 , already remove > skip !
 	}
-
-	//fmt.Print(ii, " ")
 
 	b := int(ii / 8)
 	bi := int(ii % 8)

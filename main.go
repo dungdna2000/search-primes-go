@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math"
+	"sync"
 	"time"
 
 	"homecredit.vn/prime-go/sieve"
@@ -11,10 +12,43 @@ import (
 var prime_count int64
 var SV sieve.Sieve
 
-var p int64         // the current found prime
-var composite int64 // the composite to be marked
-var count_i int64
+var prime int64     // the current found prime
+var composite int64 // the current composite to be marked
 var finished bool
+
+const MAX_THREADS = 10
+
+var num_threads = 0
+
+var mark_wait_group sync.WaitGroup
+var mark_thread_finished chan int64
+var mark_thread_all_finished sync.WaitGroup
+
+func markCompositeOf(N int64, p int64, safe_threshold int64) {
+	//fmt.Println(prime, " started!")
+
+	var _2i int64 = 2 * p
+
+	// for composite = p * p; composite <= N; composite += _2i {
+	// 	SV.Mark(composite)
+	// }
+
+	var cp int64
+	for cp = p * p; cp <= /*nsqrt*/ safe_threshold; cp += _2i {
+		SV.Mark(cp)
+	}
+
+	// release lock so that the outer thread can continue
+	mark_wait_group.Done()
+
+	// continue to run without worrying about collision!
+	for ; cp <= N; cp += _2i {
+		SV.Mark(cp)
+	}
+
+	mark_thread_all_finished.Done()
+	mark_thread_finished <- p
+}
 
 func searchPrime(N int64) {
 
@@ -23,30 +57,42 @@ func searchPrime(N int64) {
 
 	nsqrt := int64(math.Sqrt(float64(N)))
 
-	//fmt.Println("D Start marking  sqrt(N)=", nsqrt)
+	//composite = 0
+	prime_count = 2 // 2 and 3 are well-known primes, no need to search!
+	num_threads = 0
 
-	composite = 0
-	prime_count = 2
+	mark_thread_finished = make(chan int64)
 
 	var d int64 = 4
-	for p = 5; p <= nsqrt; p += d {
+	for prime = 5; prime <= nsqrt; prime += d {
 		if SV.Get() != 0 {
-			var _2i int64 = 2 * p
-			for composite = p * p; composite <= N; composite += _2i {
-				SV.Mark(composite)
-			}
 			prime_count++
+
+			// IDEA : if one routine reaches pass safe threshold (?) , we can safely start another thread until max threads reach
+			mark_wait_group.Add(1)
+			mark_thread_all_finished.Add(1)
+
+			// wait here if enough threads or continue
+			if num_threads >= MAX_THREADS {
+				<-mark_thread_finished // this should block
+				num_threads--
+			}
+
+			num_threads++
+			go markCompositeOf(N, prime, nsqrt)
+
+			mark_wait_group.Wait()
 		}
 
 		SV.Next()
 		d = flip24(d)
 	}
 
-	//prime_count = 2
-	//d = 4
-	//SV.Begin()
+	mark_thread_all_finished.Wait()
 
-	for ; p <= N; p += d {
+	//composite = -1 // to tell that no more composite is being marked!
+
+	for ; prime <= N; prime += d {
 		if SV.Get() != 0 {
 			prime_count++
 		}
@@ -88,6 +134,20 @@ func flip24(d int64) int64 {
 	return 4
 }
 
+func dump_primes(N int64) {
+	var d int64 = 4
+	var p int64
+	SV.Begin()
+	for p = 5; p <= N; p += d {
+		if SV.Get() != 0 {
+			fmt.Print(p, " ")
+		}
+		SV.Next()
+		d = flip24(d)
+	}
+	fmt.Println()
+}
+
 func test_case(N int64, expected int64) {
 	searchPrime(N)
 	fmt.Print("Test N=", N, " ... ")
@@ -96,6 +156,8 @@ func test_case(N int64, expected int64) {
 	} else {
 		fmt.Println("FAILED! Actual = ", prime_count, ", Expected = ", expected)
 	}
+
+	dump_primes(N)
 }
 
 func unit_test() {
@@ -106,21 +168,30 @@ func unit_test() {
 	test_case(1000000, 78498)
 	test_case(10000000, 664579)
 	test_case(100000000, 5761455)
-	test_case(B, 50847534)
+	//test_case(B, 50847534)
+	//test_case(10*B, 455052511)
+
 }
 
 func main() {
 	start := time.Now()
 
 	finished = false
-	unit_test()
-	//go test_case(10*B, 455052511)
-	//go test_case(1000*B, 4118054813)
+	//unit_test()
+	//test_case(10*B, 455052511)
 
-	for !finished {
-		fmt.Println(time.Since(start), " p: ", p, ">", composite, " count: ", count_i)
-		time.Sleep(2 * time.Second)
-	}
+	//test_case(1000, 168)
+	//test_case(10000, 1229)
+	test_case(100000, 9592) // sometimes 1/10 : FAILED! Actual =  9593 , Expected =  9592
+	//test_case(1000000, 78498)
+
+	//test_case(100000000, 5761455)
+	//test_case(B, 50847534)
+
+	// for !finished {
+	// 	fmt.Println(time.Since(start), " p: ", prime, ">", composite)
+	// 	time.Sleep(2 * time.Second)
+	// }
 
 	fmt.Println("Total time:", time.Since(start))
 }
