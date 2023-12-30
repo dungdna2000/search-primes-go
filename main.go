@@ -9,22 +9,17 @@ import (
 	"homecredit.vn/prime-go/sieve"
 )
 
-var prime_count int64
-var SV sieve.Sieve
+// var prime_count int64
+//var SV sieve.Sieve
 
-var prime int64     // the current found prime
-var composite int64 // the current composite to be marked
-var finished bool
-
-const MAX_THREADS = 10
-
-var num_threads = 0
-
+var prime int64
 var mark_wait_group sync.WaitGroup
 var mark_thread_finished chan int64
 var mark_thread_all_finished sync.WaitGroup
 
-func markCompositeOf(N int64, p int64, safe_threshold int64) {
+var finished bool
+
+func markCompositeOf(sv *sieve.Sieve, N int64, p int64, safe_threshold int64) {
 	//fmt.Println(prime, " started!")
 
 	var _2i int64 = 2 * p
@@ -34,8 +29,8 @@ func markCompositeOf(N int64, p int64, safe_threshold int64) {
 	// }
 
 	var cp int64
-	for cp = p * p; cp <= /*nsqrt*/ safe_threshold; cp += _2i {
-		SV.Mark(cp)
+	for cp = p * p; cp <= safe_threshold; cp += _2i {
+		sv.Mark(cp)
 	}
 
 	// release lock so that the outer thread can continue
@@ -43,64 +38,50 @@ func markCompositeOf(N int64, p int64, safe_threshold int64) {
 
 	// continue to run without worrying about collision!
 	for ; cp <= N; cp += _2i {
-		SV.Mark(cp)
+		sv.Mark(cp)
 	}
 
 	mark_thread_all_finished.Done()
 	mark_thread_finished <- p
 }
 
-func searchPrime(N int64) {
+func searchPrime(N int64, sv *sieve.Sieve, max_threads int) {
 
-	SV.Init(N)
-	SV.Begin()
+	sv.Init(N)
+	sv.Begin()
 
 	nsqrt := int64(math.Sqrt(float64(N)))
 
-	//composite = 0
-	prime_count = 2 // 2 and 3 are well-known primes, no need to search!
-	num_threads = 0
+	num_threads := 0
 
 	mark_thread_finished = make(chan int64)
 
+	// IDEA: instead of marking composite of different primes, split marking of the same prime?
+
 	var d int64 = 4
 	for prime = 5; prime <= nsqrt; prime += d {
-		if SV.Get() != 0 {
-			prime_count++
-
+		if sv.Get() != 0 {
 			// IDEA : if one routine reaches pass safe threshold (?) , we can safely start another thread until max threads reach
 			mark_wait_group.Add(1)
 			mark_thread_all_finished.Add(1)
 
 			// wait here if enough threads or continue
-			if num_threads >= MAX_THREADS {
+			if num_threads >= max_threads {
 				<-mark_thread_finished // this should block
 				num_threads--
 			}
 
 			num_threads++
-			go markCompositeOf(N, prime, nsqrt)
+			go markCompositeOf(sv, N, prime, nsqrt)
 
 			mark_wait_group.Wait()
 		}
 
-		SV.Next()
+		sv.Next()
 		d = flip24(d)
 	}
 
 	mark_thread_all_finished.Wait()
-
-	//composite = -1 // to tell that no more composite is being marked!
-
-	for ; prime <= N; prime += d {
-		if SV.Get() != 0 {
-			prime_count++
-		}
-		SV.Next()
-		d = flip24(d)
-	}
-
-	finished = true
 }
 
 /*
@@ -134,30 +115,40 @@ func flip24(d int64) int64 {
 	return 4
 }
 
-func dump_primes(N int64) {
-	var d int64 = 4
-	var p int64
-	SV.Begin()
-	for p = 5; p <= N; p += d {
-		if SV.Get() != 0 {
-			fmt.Print(p, " ")
-		}
-		SV.Next()
-		d = flip24(d)
-	}
-	fmt.Println()
-}
+// func dump_primes(N int64) {
+// 	var d int64 = 4
+// 	var p int64
+// 	SV.Begin()
+// 	for p = 5; p <= N; p += d {
+// 		if SV.Get() != 0 {
+// 			fmt.Print(p, " ")
+// 		}
+// 		SV.Next()
+// 		d = flip24(d)
+// 	}
+// 	fmt.Println()
+// }
 
 func test_case(N int64, expected int64) {
-	searchPrime(N)
+	var sv sieve.Sieve
+
+	searchPrime(N, &sv, 1)
+
 	fmt.Print("Test N=", N, " ... ")
+	var prime_count int64 = sv.Count()
 	if prime_count == expected {
 		fmt.Println("OK")
 	} else {
 		fmt.Println("FAILED! Actual = ", prime_count, ", Expected = ", expected)
+
+		// re-run with 1 thread to compare
+		var sv_expected sieve.Sieve
+		searchPrime(N, &sv_expected, 1)
+
+		sv_expected.Compare(&sv)
 	}
 
-	dump_primes(N)
+	//dump_primes(N)
 }
 
 func unit_test() {
@@ -168,7 +159,7 @@ func unit_test() {
 	test_case(1000000, 78498)
 	test_case(10000000, 664579)
 	test_case(100000000, 5761455)
-	//test_case(B, 50847534)
+	test_case(B, 50847534)
 	//test_case(10*B, 455052511)
 
 }
@@ -178,12 +169,13 @@ func main() {
 
 	finished = false
 	//unit_test()
+
 	//test_case(10*B, 455052511)
 
 	//test_case(1000, 168)
 	//test_case(10000, 1229)
-	test_case(100000, 9592) // sometimes 1/10 : FAILED! Actual =  9593 , Expected =  9592
-	//test_case(1000000, 78498)
+	//test_case(100000, 9592) // sometimes 1/10 : FAILED! Actual =  9593 , Expected =  9592
+	test_case(1000000, 78498)
 
 	//test_case(100000000, 5761455)
 	//test_case(B, 50847534)

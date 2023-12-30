@@ -1,12 +1,16 @@
 package sieve
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Sieve struct {
 	bits []byte
 
 	current_byte int
 	current_bit  int
+
+	N int64
 }
 
 var mask_get [8]byte
@@ -50,18 +54,9 @@ func (sv *Sieve) Next() {
 	}
 }
 
-func (sv Sieve) String() string {
-	var res string
-	res = fmt.Sprintf("len: %d\n", len(sv.bits))
-	for _, b := range sv.bits {
-		res += fmt.Sprintf("%08b ", b)
-	}
-	return res
-}
-
 // Initialize the sieve to store enough N int64
 func (sv *Sieve) Init(N int64) {
-
+	sv.N = N
 	required_size := N/(3*8) + 1
 	sv.bits = make([]byte, required_size)
 	len_bits := len(sv.bits)
@@ -121,7 +116,8 @@ func (sv *Sieve) Mark(n int64) {
 
 	b := int(ii / 8)
 	bi := int(ii % 8)
-	sv.bits[b] &= mask_mark[bi]
+
+	sv.bits[b] = sv.bits[b] & mask_mark[bi]
 
 	// switch bi {
 	// case 0:
@@ -141,4 +137,43 @@ func (sv *Sieve) Mark(n int64) {
 	// case 7:
 	// 	sv.bits[b] &= 0b01111111
 	// }
+}
+
+func flip24(d int64) int64 {
+	if d == 4 {
+		return 2
+	}
+	return 4
+}
+
+func (sv *Sieve) Count() int64 {
+	var prime int64 = 0
+	var count int64 = 2
+	var d int64 = 4
+	sv.Begin()
+	for prime = 5; prime <= sv.N; prime += d {
+		if sv.Get() != 0 {
+			count++
+		}
+		sv.Next()
+		d = flip24(d)
+	}
+	return count
+}
+
+func (sv *Sieve) Compare(svOther *Sieve) {
+	var prime int64
+	var d int64 = 4
+
+	sv.Begin()
+	svOther.Begin()
+
+	for prime = 5; prime <= sv.N; prime += d {
+		if (sv.Get() != 0) != (svOther.Get() != 0) {
+			fmt.Println(prime)
+		}
+		sv.Next()
+		svOther.Next()
+		d = flip24(d)
+	}
 }

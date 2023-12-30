@@ -1,3 +1,12 @@
+
+
+
+
+mutex Ok but performance is even worst !
+
+https://go101.org/article/concurrent-atomic-operation.html
+
+
 https://dev.to/karanpratapsingh/go-course-sync-package-5c3m
 
 Test N=10000000000 ... FAILED! Actual =  455,264,039 , Expected =  455,052,511
