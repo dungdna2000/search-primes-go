@@ -117,6 +117,10 @@ func (sv *Sieve) Mark(n int64) {
 	b := int(ii / 8)
 	bi := int(ii % 8)
 
+	if b > len(sv.bits) {
+		fmt.Println(">> panic! n = ", n, "ii = ", ii, " ", b)
+	}
+
 	sv.bits[b] = sv.bits[b] & mask_mark[bi]
 
 	// switch bi {

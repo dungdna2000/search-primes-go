@@ -1,21 +1,35 @@
 
 
 
-
-mutex Ok but performance is even worst !
-
 https://go101.org/article/concurrent-atomic-operation.html
-
-
 https://dev.to/karanpratapsingh/go-course-sync-package-5c3m
 
 Test N=10000000000 ... FAILED! Actual =  455,264,039 , Expected =  455,052,511
 Total time: 30.9685s
 
-Test N=10000000000 ... OK
+Test N=10 000 000 000 ... OK
 Total time: 1m19.0588697s
 
 
+Test N=10000000000 ... OK
+Total time: 13.0724408s
+
+b = 4,168,216	size = 4,166,667
+
+
+ii = 33,345,730  > n = 100,037,195
+
+9949^2 = 98,982,601  
+
+98,982,601
+
+
+Total time: 6.1614219s
+
+n % i = k
+
+n = (a * i) + k  => n - k = a * i  
+ 
 
 // byte    0                    1                       2                          3 
 // bit     0  1  2  3  4  5  6  7  0  1  2  3  4  5  6  7  0  1  2  3  4  5  6  7  0  1  2  3  4  5  6  7
