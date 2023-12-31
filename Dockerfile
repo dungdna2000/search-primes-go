@@ -1,6 +1,6 @@
 FROM golang:latest 
 WORKDIR /search-primes
-RUN go mod init homecredit.vn/primes
+RUN go mod init homecredit.vn/prime-go
 COPY *.go /search-primes/
 RUN go mod tidy
 RUN go build -o main
