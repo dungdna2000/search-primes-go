@@ -1,7 +1,8 @@
-FROM golang:latest 
+FROM golang:1.21.5
 WORKDIR /search-primes
+COPY *.go .
+COPY sieve/ sieve
 RUN go mod init homecredit.vn/prime-go
-COPY *.go /search-primes/
-RUN go mod download
+RUN go mod tidy
 RUN go build -o main
 CMD ["./main"]
