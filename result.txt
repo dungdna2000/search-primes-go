@@ -2,3 +2,19 @@
 FAILED! Actual =  11818439135 , Expected =  4118054813 . Time:  6m59.1822352s
 
  500000000000 FAILED! Actual= 19308136142 ,Expected= 4118054813 .Time:  12m7.1828197s
+
+ 100  PASSED! Actual=Expected= 25 .Time:  510.9µs
+
+ 1000  PASSED! Actual=Expected= 168 .Time:  503.9µs
+
+ 10000  PASSED! Actual=Expected= 1229 .Time:  512.2µs
+
+ 100000  PASSED! Actual=Expected= 9592 .Time:  1.3042ms
+
+ 1000000  PASSED! Actual=Expected= 78498 .Time:  6.2589ms
+
+ 10000000  PASSED! Actual=Expected= 664579 .Time:  56.0609ms
+
+ 100000000  PASSED! Actual=Expected= 5761455 .Time:  334.1004ms
+
+ 1000000000  PASSED! Actual=Expected= 50847534 .Time:  3.4034187s

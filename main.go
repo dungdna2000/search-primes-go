@@ -181,48 +181,43 @@ func all_test_cases(threads int64) {
 	test_case(100000000, 5761455, threads)
 	test_case(B, 50847534, threads)
 	//test_case(10*B, 455052511, threads)
-
 }
 
-func main1() {
-	start := time.Now()
+func main() {
+	//start := time.Now()
 
 	finished = false
 
-	//all_test_cases()
+	all_test_cases(20)
 
 	//test_case(10*B, 455052511)
 
-	//test_case(1000, 168)
-	//test_case(10000, 1229)
-	//test_case(100000, 9592)
-	//test_case(1000000, 78498)
-
-	//test_case(100000000, 5761455, 10)
-	//test_case(B, 50847534, 10)
-	//go test_case(10*B, 455052511, 10)
-
-	//go test_case(100*B, 4118054813, 10)
-
+	//go test_case(1000, 168)
+	//go test_case(10000, 1229)
+	//go test_case(100000, 9592)
+	//go test_case(1000000, 78498)
+	//go test_case(100000000, 5761455, 10)
 	//go test_case(B, 50847534, 10)
-
+	//go test_case(10*B, 455052511, 10)
+	//go test_case(100*B, 4118054813, 10)
+	//go test_case(B, 50847534, 10)
 	//go test_case(100*B, 4118054813, 20)
-	go test_case(500*B, 4118054813, 20)
+	//go test_case(500*B, 4118054813, 20)
 
 	//go test_case(1000*B, 37607912018, 20)
 
-	lastp := prime
+	// lastp := prime
 
-	for !finished {
-		if prime > lastp {
-			fmt.Print("\n", time.Since(start), ":", nsqrt, ",", prime)
-			lastp = prime
-		} else {
-			fmt.Print(".")
-		}
+	// for !finished {
+	// 	if prime > lastp {
+	// 		fmt.Print("\n", time.Since(start), ":", nsqrt, ",", prime)
+	// 		lastp = prime
+	// 	} else {
+	// 		fmt.Print(".")
+	// 	}
 
-		time.Sleep(5 * time.Second)
-	}
+	// 	time.Sleep(5 * time.Second)
+	// }
 
 }
 
@@ -252,19 +247,18 @@ func main1() {
 
 // }
 
-//  2    1    2    1    2    3    1    3
-
 // var d_pattern = [8]int64{2, 1, 2, 1, 2, 3, 1, 3}
 
+// p+=d - to generate next number in seq
 var d_pattern = [8]int64{4, 2, 4, 2, 4, 6, 2, 6}
 
-// total_d = 38
-// total_d/2 = 19
+// m = (p-7)*4 % 15
+//var m_pattern = [8]int64{0, 1, 9, 10, 3, 4, 13, 6}
 
-var primes []int64
+//var primes []int64
 
-func main() {
-	var N int64 = 1 * B
+func main_skip35() {
+	var N int64 = 4000
 	var p int64
 
 	// for p = 0; p < N; p++ {
@@ -274,18 +268,46 @@ func main() {
 
 	// primes = make([]int64, 0)
 
-	// for p = 7; p <= N; p += 2 {
-	// 	if p%3 != 0 && p%5 != 0 {
-	// 		fmt.Printf("%4d ", p)
+	var i int64 = 0
+	for p = 7; p <= N; p += 2 {
+
+		if p%3 != 0 && p%5 != 0 {
+			fmt.Printf("%3d ", i)
+			i++
+			// 	fmt.Printf("%3d ", p)
+		}
+	}
+	fmt.Println()
+
+	//d_idx := -1
+	//j := int64(0)
+
+	// for p = 7; p <= N; p += d_pattern[d_idx] {
+	// 	fmt.Printf("%3d ", (p-7)*4/15)
+
+	// 	d_idx++
+	// 	if d_idx == 8 {
+	// 		d_idx = 0
 	// 	}
+	// 	j++
 	// }
 
+	// fmt.Println()
+
 	d_idx := -1
-	j := int64(0)
 	for p = 7; p <= N; p += d_pattern[d_idx] {
-		if primes[j] != p {
-			fmt.Printf("%4d ", p)
+
+		var j int64 = ((p - 7) * 4) / 15
+		var m int64 = ((p - 7) * 4) % 15
+
+		// magic seq of m :  0, 1, 9, 10, 3, 4, 13, 6
+
+		if m > 1 {
+			j++
 		}
+
+		fmt.Printf("%3d ", m)
+
 		d_idx++
 		if d_idx == 8 {
 			d_idx = 0

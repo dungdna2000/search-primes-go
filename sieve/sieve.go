@@ -54,7 +54,7 @@ func (sv *Sieve) Next() {
 	}
 }
 
-// Initialize the sieve to store enough N int64
+// Initialize the sieve to store enough int64 numbers
 func (sv *Sieve) Init(N int64) {
 	sv.N = N
 	required_size := N/(3*8) + 1
